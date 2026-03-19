@@ -1,0 +1,70 @@
+{% extends 'library/base.html' %}
+
+{% block title %}{{ collection.name }} — Коллекции автографов{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- Хлебные крошки -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb bg-transparent px-0">
+      <li class="breadcrumb-item"><a href="{% url 'library:homepage' %}">Главная</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ collection.name }}</li>
+    </ol>
+  </nav>
+
+  <h1 class="mb-4 fw-bold">{{ collection.name }}</h1>
+
+  {% if collection.description %}
+    <div class="lead text-muted mb-5">
+      {{ collection.description|safe }}
+    </div>
+  {% endif %}
+
+  {% if authors %}
+    <h3 class="mb-4">Авторы коллекции</h3>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+      {% for author in authors %}
+      <div class="col">
+        <div class="card h-100 shadow-sm border-0 text-center">
+          <div class="card-body pt-4">
+            {% if author.photo %}
+              <img src="{{ author.photo.url }}"
+                   class="rounded-circle mb-3"
+                   alt="{{ author }}"
+                   style="width: 140px; height: 140px; object-fit: cover; border: 4px solid #f8f9fa;">
+            {% else %}
+              <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mb-3 mx-auto"
+                   style="width: 140px; height: 140px; border: 4px solid #f8f9fa;">
+                <span class="text-muted fs-1">?</span>
+              </div>
+            {% endif %}
+
+            <h5 class="card-title fw-bold">
+              {{ author }}
+            </h5>
+
+            {% if author.biography %}
+              <p class="card-text text-muted small">
+                {{ author.biography|striptags|truncatewords:25 }}
+              </p>
+            {% endif %}
+
+            <a href="{% url 'library:author_detail' author.pk %}"
+               class="btn btn-outline-primary mt-3">
+              Подробнее об авторе →
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5 my-5">
+      <h4 class="text-muted">В этой коллекции пока нет авторов</h4>
+      <p>Добавьте авторов через админ-панель</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

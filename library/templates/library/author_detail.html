@@ -1,0 +1,117 @@
+{% extends "library/base.html" %}
+
+{% block title %}{{ author }} — Автографы и коллекции{% endblock %}
+
+{% block content %}
+
+<div class="container my-5">
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-4 text-center text-md-start mb-4 mb-md-0">
+            {% if author.photo %}
+                <img 
+                    src="{{ author.photo.url }}" 
+                    alt="{{ author }}" 
+                    class="img-fluid rounded shadow cursor-pointer" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#photoModal"
+                >
+            {% else %}
+                <div class="bg-light rounded d-flex align-items-center justify-content-center shadow" style="height: 400px; width: 100%;">
+                    <span class="text-muted fs-4">Фото отсутствует</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold mb-3">
+                {{ author.surname }} {{ author.name }}
+                {% if author.patronymic %}{{ author.patronymic }}{% endif %}
+            </h1>
+            {% if author.birth_year or author.death_year %}
+            <p class="text-muted lead mb-4">
+                {% if author.birth_year %}{{ author.birth_year }}{% endif %}
+                {% if author.death_year %} — {{ author.death_year }}{% endif %}
+            </p>
+            {% endif %}
+
+            {% if author.biography %}
+                <div class="biography lead">
+                    {{ author.biography|safe }}
+                </div>
+            {% else %}
+                <p class="text-muted fst-italic mt-4">Биография пока не добавлена.</p>
+            {% endif %}
+
+            {% if author.collections.exists %}
+            <div class="mt-4">
+                <h5>Коллекции:</h5>
+                <ul class="list-inline mb-0">
+                    {% for coll in author.collections.all %}
+                        <li class="list-inline-item">
+                            <span class="badge bg-primary text-white px-3 py-2">{{ coll.name }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <h3 class="mb-4">Материалы автора</h3>
+
+    {% if author.items.exists %}
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for item in author.items.all %}
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0">
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 220px; object-fit: cover;">
+                {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 220px;">
+                        <span class="text-muted">Нет изображения</span>
+                    </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ item.get_item_type_display }}: {{ item.title }}</h5>
+                    {% if item.year %}
+                        <p class="card-text text-muted small">{{ item.year }}</p>
+                    {% endif %}
+                    {% if item.description %}
+                        <p class="card-text small">{{ item.description|truncatewords:40|safe }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="alert alert-info">
+            У этого автора пока нет добавленных материалов.
+        </div>
+    {% endif %}
+
+    <div class="mt-5">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary px-4 py-2">
+            ← Назад
+        </a>
+    </div>
+</div>
+
+
+{% if author.photo %}
+<div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="photoModalLabel">{{ author }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img src="{{ author.photo.url }}" alt="{{ author }}" class="img-fluid" style="max-height: 90vh;">
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
