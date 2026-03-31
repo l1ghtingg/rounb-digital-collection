@@ -111,3 +111,15 @@ class Item(models.Model):
             return mark_safe(f'<img src="{self.image.url}" width="120">')
         return "—"
     preview_image.short_description = "Изображение"
+
+class Tag(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name="Название тега")
+    slug = models.SlugField(max_length=100, unique=True, blank=True, verbose_name="Slug")
+
+    class Meta:
+        verbose_name = "Тег"
+        verbose_name_plural = "Теги"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name

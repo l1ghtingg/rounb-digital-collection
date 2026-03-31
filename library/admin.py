@@ -1,6 +1,11 @@
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Collection, Author, Item
+from .models import Collection, Author, Item, Tag
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
 
 
 @admin.register(Collection)

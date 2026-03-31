@@ -4,58 +4,55 @@
 
 {% block content %}
 
-<div class="container my-5">
-    <div class="row mb-5 align-items-center">
-        <div class="col-md-4 text-center text-md-start mb-4 mb-md-0">
-            {% if author.photo %}
-                <img 
-                    src="{{ author.photo.url }}" 
-                    alt="{{ author }}" 
-                    class="img-fluid rounded shadow cursor-pointer" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#photoModal"
-                >
-            {% else %}
-                <div class="bg-light rounded d-flex align-items-center justify-content-center shadow" style="height: 400px; width: 100%;">
-                    <span class="text-muted fs-4">Фото отсутствует</span>
-                </div>
-            {% endif %}
+<div class="row mb-5">
+    <div class="col-12">
+        {% if author.photo %}
+        <div class="float-start me-4 mb-3">
+            <img 
+                src="{{ author.photo.url }}" 
+                alt="{{ author }}" 
+                class="rounded shadow cursor-pointer" 
+                style="max-width: 300px; width: 100%; height: auto;"
+                data-bs-toggle="modal" 
+                data-bs-target="#photoModal"
+            >
         </div>
+        {% endif %}
+        
+        <h1 class="display-5 fw-bold mb-3">
+            {{ author.surname }} {{ author.name }}
+            {% if author.patronymic %}{{ author.patronymic }}{% endif %}
+        </h1>
+        
+        {% if author.birth_year or author.death_year %}
+        <p class="text-muted lead mb-4">
+            {% if author.birth_year %}{{ author.birth_year }}{% endif %}
+            {% if author.death_year %} — {{ author.death_year }}{% endif %}
+        </p>
+        {% endif %}
 
-        <div class="col-md-8">
-            <h1 class="display-5 fw-bold mb-3">
-                {{ author.surname }} {{ author.name }}
-                {% if author.patronymic %}{{ author.patronymic }}{% endif %}
-            </h1>
-            {% if author.birth_year or author.death_year %}
-            <p class="text-muted lead mb-4">
-                {% if author.birth_year %}{{ author.birth_year }}{% endif %}
-                {% if author.death_year %} — {{ author.death_year }}{% endif %}
-            </p>
-            {% endif %}
-
-            {% if author.biography %}
-                <div class="biography lead">
-                    {{ author.biography|safe }}
-                </div>
-            {% else %}
-                <p class="text-muted fst-italic mt-4">Биография пока не добавлена.</p>
-            {% endif %}
-
-            {% if author.collections.exists %}
-            <div class="mt-4">
-                <h5>Коллекции:</h5>
-                <ul class="list-inline mb-0">
-                    {% for coll in author.collections.all %}
-                        <li class="list-inline-item">
-                            <span class="badge bg-primary text-white px-3 py-2">{{ coll.name }}</span>
-                        </li>
-                    {% endfor %}
-                </ul>
+        {% if author.biography %}
+            <div class="biography lead">
+                {{ author.biography|safe }}
             </div>
-            {% endif %}
+        {% else %}
+            <p class="text-muted fst-italic mt-4">Биография пока не добавлена.</p>
+        {% endif %}
+
+        {% if author.collections.exists %}
+        <div class="mt-4">
+            <h5>Коллекции:</h5>
+            <ul class="list-inline mb-0">
+                {% for coll in author.collections.all %}
+                    <li class="list-inline-item">
+                        <span class="badge bg-primary text-white px-3 py-2">{{ coll.name }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
         </div>
+        {% endif %}
     </div>
+</div>
 
     <h3 class="mb-4">Материалы автора</h3>
 

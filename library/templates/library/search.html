@@ -1,0 +1,61 @@
+{% extends 'library/base.html' %}
+
+{% block title %}Поиск — {{ query }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">Результаты поиска по запросу: «{{ query }}»</h2>
+
+    {% if results_authors %}
+    <h4 class="mt-5 mb-3">Авторы ({{ results_authors.count }})</h4>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for author in results_authors %}
+        <div class="col">
+            <div class="card h-100">
+                {% if author.photo %}
+    <img src="{{ author.photo.url }}" 
+         class="rounded-circle mx-auto d-block mt-3 mb-3" 
+         alt="{{ author }}"
+         style="width: 140px; height: 140px; object-fit: cover; border: 3px solid #f8f9fa; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+{% else %}
+    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mt-3 mb-3" 
+         style="width: 140px; height: 140px; border: 3px solid #f8f9fa;">
+        <span class="text-muted fs-1">?</span>
+    </div>
+{% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ author }}</h5>
+                    <a href="{% url 'library:author_detail' author.pk %}" class="btn btn-primary btn-sm">Подробнее</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if results_items %}
+    <h4 class="mt-5 mb-3">Материалы ({{ results_items.count }})</h4>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for item in results_items %}
+        <div class="col">
+            <div class="card h-100">
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ item.title }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ item.get_item_type_display }}: {{ item.title }}</h5>
+                    <p class="card-text small">{{ item.author }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not results_authors and not results_items and query %}
+    <div class="alert alert-info mt-4">
+        По запросу «{{ query }}» ничего не найдено.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

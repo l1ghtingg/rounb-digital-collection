@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'library',
     'ckeditor',
     'ckeditor_uploader',
+    'django_erd_generator'
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,75 @@
+erDiagram
+LogEntry {
+  integer id pk
+  text action_time 
+  integer user_id 
+  integer content_type_id 
+  text object_id 
+  varchar object_repr 
+  smallint_unsigned action_flag 
+  text change_message 
+}
+Permission {
+  integer id pk
+  varchar name 
+  integer content_type_id 
+  varchar codename 
+}
+Group {
+  integer id pk
+  varchar name 
+}
+User {
+  integer id pk
+  varchar password 
+  text last_login 
+  bool is_superuser 
+  varchar username 
+  varchar first_name 
+  varchar last_name 
+  varchar email 
+  bool is_staff 
+  bool is_active 
+  text date_joined 
+}
+ContentType {
+  integer id pk
+  varchar app_label 
+  varchar model 
+}
+Session {
+  varchar session_key pk
+  text session_data 
+  text expire_date 
+}
+Collection {
+  integer id pk
+  varchar name 
+  text description 
+  varchar cover_image 
+}
+Author {
+  integer id pk
+  varchar surname 
+  varchar name 
+  varchar patronymic 
+  varchar photo 
+  text biography 
+}
+Item {
+  integer id pk
+  integer author_id 
+  varchar item_type 
+  varchar title 
+  text description 
+  smallint_unsigned year 
+  varchar image 
+}
+Author }|--|{ Collection: ""
+Item }|--|| Author: ""
+Group }|--|{ User: ""
+Group }|--|{ Permission: ""
+LogEntry }|--|| User: ""
+LogEntry }|--|| ContentType: ""
+User }|--|{ Permission: ""
+Permission }|--|| ContentType: ""
