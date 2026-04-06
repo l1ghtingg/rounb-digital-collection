@@ -4,35 +4,51 @@
 
 {% block content %}
 <div class="container my-5">
-    <h2 class="mb-4">Результаты поиска по запросу: «{{ query }}»</h2>
+    <h2 class="mb-4">Результаты поиска</h2>
 
-    {% if results_authors %}
-    <h4 class="mt-5 mb-3">Авторы ({{ results_authors.count }})</h4>
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        {% for author in results_authors %}
-        <div class="col">
-            <div class="card h-100">
-                {% if author.photo %}
-    <img src="{{ author.photo.url }}" 
-         class="rounded-circle mx-auto d-block mt-3 mb-3" 
-         alt="{{ author }}"
-         style="width: 140px; height: 140px; object-fit: cover; border: 3px solid #f8f9fa; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-{% else %}
-    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mt-3 mb-3" 
-         style="width: 140px; height: 140px; border: 3px solid #f8f9fa;">
-        <span class="text-muted fs-1">?</span>
-    </div>
-{% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ author }}</h5>
-                    <a href="{% url 'library:author_detail' author.pk %}" class="btn btn-primary btn-sm">Подробнее</a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
+    {% if query %}
+        <p class="lead mb-4">По запросу: «{{ query }}»</p>
     {% endif %}
 
+    {% if tag_slug == 'юбиляры' and year %}
+        <p class="lead mb-4">Юбиляры {{ year }} года</p>
+    {% endif %}
+
+    {% if results_authors %}
+<h4 class="mt-5 mb-3">Авторы ({{ results_authors.count }})</h4>
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for author in results_authors %}
+    <div class="col">
+        <div class="card h-100 shadow-sm border-0 text-center">
+            
+            <!-- Фото автора (круглое) -->
+            {% if author.photo %}
+                <img src="{{ author.photo.url }}" 
+                     class="rounded-circle mx-auto mt-4 mb-3" 
+                     alt="{{ author }}"
+                     style="width: 140px; height: 140px; object-fit: cover; border: 4px solid #f8f9fa; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            {% else %}
+                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mt-4 mb-3" 
+                     style="width: 140px; height: 140px; border: 4px solid #f8f9fa;">
+                    <span class="text-muted fs-1">?</span>
+                </div>
+            {% endif %}
+            
+            <!-- ФИО с отчеством -->
+            <div class="card-body pt-0">
+                <h5 class="card-title mb-2">
+                    {{ author.surname }} {{ author.name }}
+                    {% if author.patronymic %}{{ author.patronymic }}{% endif %}
+                </h5>
+                
+                <a href="{% url 'library:author_detail' author.pk %}" 
+                   class="btn btn-primary btn-sm">Подробнее</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
     {% if results_items %}
     <h4 class="mt-5 mb-3">Материалы ({{ results_items.count }})</h4>
     <div class="row row-cols-1 row-cols-md-3 g-4">

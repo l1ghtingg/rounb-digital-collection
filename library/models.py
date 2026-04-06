@@ -67,6 +67,18 @@ class Author(models.Model):
         return "—"
     preview_photo.short_description = "Фото"
 
+class Tag(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name="Название тега")
+    slug = models.SlugField(max_length=100, unique=True, blank=True, verbose_name="Slug")
+
+    class Meta:
+        verbose_name = "Тег"
+        verbose_name_plural = "Теги"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
 
 class Item(models.Model):
     TYPE_CHOICES = [
@@ -97,6 +109,7 @@ class Item(models.Model):
         blank=True,
         null=True
     )
+    tags = models.ManyToManyField(Tag, blank=True, related_name='items', verbose_name="Теги")
 
     class Meta:
         verbose_name = "Элемент коллекции"
@@ -111,15 +124,3 @@ class Item(models.Model):
             return mark_safe(f'<img src="{self.image.url}" width="120">')
         return "—"
     preview_image.short_description = "Изображение"
-
-class Tag(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name="Название тега")
-    slug = models.SlugField(max_length=100, unique=True, blank=True, verbose_name="Slug")
-
-    class Meta:
-        verbose_name = "Тег"
-        verbose_name_plural = "Теги"
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name

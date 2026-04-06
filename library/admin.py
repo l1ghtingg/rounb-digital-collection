@@ -6,7 +6,7 @@ from .models import Collection, Author, Item, Tag
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
-
+    search_fields = ('name',)
 
 @admin.register(Collection)
 class CollectionAdmin(admin.ModelAdmin):
@@ -43,8 +43,9 @@ class AuthorAdmin(admin.ModelAdmin):
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
     list_display = ('title', 'get_item_type_display', 'author', 'year', 'preview_image')
-    list_filter = ('item_type', 'author', 'year')
-    search_fields = ('title', 'description', 'author__surname', 'author__name')
+    list_filter = ('item_type', 'author', 'year', 'tags')        
+    search_fields = ('title', 'description', 'author__surname')
+    filter_horizontal = ('tags',)
     readonly_fields = ('preview_image',)
 
     def preview_image(self, obj):
