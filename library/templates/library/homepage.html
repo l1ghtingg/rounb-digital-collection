@@ -52,39 +52,45 @@
                     </div>
                 </div>
 
-                <div class="mt-4">
-    <h5 class="text-white mb-3">Поиск по тегам</h5>
-    <form method="GET" action="{% url 'library:search' %}" id="tag-form">
-        <div class="row justify-content-center align-items-end g-3">
-            <div class="col-md-5">
-                <select class="form-select form-select-lg" name="tag" id="tag-select">
-                    <option value="">Выберите тег...</option>
-                    <option value="ВОВ">Участие в ВОв</option>
-                    <option value="юбиляры">Юбиляры</option>
-                </select>
-            </div>
-            
-            <!-- Поле года (показывается только для юбиляров) -->
-            <div class="col-md-3" id="year-field" style="display: none;">
-                <input type="number" 
-                       class="form-control form-control-lg" 
-                       name="year" 
-                       id="year-input"
-                       value="{{ current_year }}"
-                       placeholder="Год">
-            </div>
+                                <div class="mt-5">
+                    <h5 class="text-white mb-3">Поиск по тегам</h5>
+                    
+                    <form method="GET" action="{% url 'library:search' %}" id="tag-form">
+                        <div class="row justify-content-center align-items-end g-3">
+                            <div class="col-md-5">
+                                <select class="form-select form-select-lg" name="tag" id="tag-select">
+                                    <option value="">Выберите тег...</option>
+                                    {% if all_tags %}
+                                        {% for tag in all_tags %}
+                                            <option value="{{ tag.slug }}">{{ tag.name }}</option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option value="">Теги ещё не добавлены</option>
+                                    {% endif %}
+                                </select>
+                            </div>
 
-            <div class="col-md-2">
-                <button class="btn btn-primary btn-lg w-100" type="submit">Применить</button>
-            </div>
-        </div>
-    </form>
-</div>
+                            <!-- Поле года для юбиляров -->
+                            <div class="col-md-3" id="year-field" style="display: none;">
+                                <input type="number" 
+                                       class="form-control form-control-lg" 
+                                       name="year" 
+                                       id="year-input"
+                                       value="{{ current_year }}"
+                                       placeholder="Год">
+                            </div>
+
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary btn-lg w-100">Найти</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
 
 <script>
 document.getElementById('tag-select').addEventListener('change', function() {
     const yearField = document.getElementById('year-field');
-    if (this.value === 'юбиляры') {
+    if (this.value === 'yubilyary') {
         yearField.style.display = 'block';
     } else {
         yearField.style.display = 'none';

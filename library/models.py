@@ -27,46 +27,6 @@ class Collection(models.Model):
         return "—"
     preview_cover.short_description = "Обложка"
 
-
-class Author(models.Model):
-    surname = models.CharField(max_length=150, verbose_name="Фамилия")
-    name = models.CharField(max_length=150, verbose_name="Имя")
-    patronymic = models.CharField(max_length=150, blank=True, null=True, verbose_name="Отчество")
-    def __str__(self):
-        parts = [self.surname, self.name]
-        if self.patronymic:
-            parts.append(self.patronymic)
-        return ' '.join(parts)
-
-    photo = models.ImageField(
-        upload_to='authors/',
-        verbose_name="Фото автора",
-        blank=True,
-        null=True
-    )
-    biography = RichTextField(verbose_name="Биография", blank=True, null=True)
-
-    collections = models.ManyToManyField(
-        Collection,
-        verbose_name="Коллекции",
-        related_name="authors",
-        blank=True
-    )
-
-    class Meta:
-        verbose_name = "Автор"
-        verbose_name_plural = "Авторы"
-        ordering = ['surname', 'name']
-
-    def __str__(self):
-        return f"{self.surname} {self.name}".strip()
-
-    def preview_photo(self):
-        if self.photo:
-            return mark_safe(f'<img src="{self.photo.url}" width="80" style="border-radius:50%;">')
-        return "—"
-    preview_photo.short_description = "Фото"
-
 class Tag(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Название тега")
     slug = models.SlugField(max_length=100, unique=True, blank=True, verbose_name="Slug")
@@ -79,6 +39,49 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+class Author(models.Model):
+    surname = models.CharField(max_length=150, verbose_name="Фамилия")
+    name = models.CharField(max_length=150, verbose_name="Имя")
+    patronymic = models.CharField(max_length=150, blank=True, null=True, verbose_name="Отчество")
+    
+    birth_year = models.PositiveSmallIntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Год рождения"
+    )
+    
+    death_year = models.PositiveSmallIntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="Год смерти"
+    )
+
+    photo = models.ImageField(upload_to='authors/', verbose_name="Фото автора", blank=True, null=True)
+    biography = RichTextField(verbose_name="Биография", blank=True, null=True)
+
+    collections = models.ManyToManyField(
+        Collection, verbose_name="Коллекции", related_name="authors", blank=True
+    )
+
+    # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+    tags = models.ManyToManyField(
+        Tag, 
+        blank=True, 
+        related_name='authors', 
+        verbose_name="Теги"
+    )
+    # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+    class Meta:
+        verbose_name = "Автор"
+        verbose_name_plural = "Авторы"
+        ordering = ['surname', 'name']
+
+    def __str__(self):
+        parts = [self.surname, self.name]
+        if self.patronymic:
+            parts.append(self.patronymic)
+        return ' '.join(parts)
 
 class Item(models.Model):
     TYPE_CHOICES = [
