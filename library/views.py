@@ -7,6 +7,21 @@ from django.shortcuts import get_object_or_404, render
 from .models import Author, Collection, Item, Tag
 
 
+def get_anniversary_info(author, year):
+    anniversaries = []
+
+    if author.birth_date:
+        age = year - author.birth_date.year
+        if age >= 75 and age % 5 == 0:
+            anniversaries.append({
+                'value': age,
+                'event_date': author.birth_date.replace(year=year),
+                'label': f'{age} лет со дня рождения',
+            })
+
+    anniversaries.sort(key=lambda x: (x['event_date'].month, x['event_date'].day))
+    return anniversaries
+
 def homepage(request):
     collections = Collection.objects.all().order_by('name')
     all_tags = Tag.objects.all().order_by('name')
@@ -14,7 +29,7 @@ def homepage(request):
     return render(request, 'library/homepage.html', {
         'collections': collections,
         'all_tags': all_tags,
-        'current_year': 2026,
+        'current_year': datetime.now().year,
     })
 
 
@@ -34,25 +49,29 @@ def search(request):
 
     if tag_slug:
         selected_tag = Tag.objects.filter(slug=tag_slug).first()
-
-        results_authors = Author.objects.filter(
-            tags__slug=tag_slug
-        ).distinct()
+        results_authors = Author.objects.filter(tags__slug=tag_slug).distinct()
+        results_items = Item.objects.none()
 
         if tag_slug == 'yubilyary' and year:
             filtered_authors = []
 
             for author in results_authors:
-                if author.birth_year:
-                    jubilee_age = year - author.birth_year
+                anniversaries = get_anniversary_info(author, year)
+                if anniversaries:
+                    author.anniversaries = anniversaries
+                    author.main_anniversary = anniversaries[0]
+                    filtered_authors.append(author)
 
-                    if jubilee_age >= 75 and jubilee_age % 5 == 0:
-                        author.jubilee_age = jubilee_age
-                        filtered_authors.append(author)
-
+            filtered_authors.sort(
+                key=lambda a: (
+                    a.main_anniversary['event_date'].month,
+                    a.main_anniversary['event_date'].day,
+                    a.surname or '',
+                    a.name or '',
+                    a.patronymic or '',
+                )
+            )
             results_authors = filtered_authors
-
-        results_items = Item.objects.none()
 
     if letter:
         results_authors = Author.objects.filter(
@@ -76,7 +95,6 @@ def search(request):
                 matched_authors.append(author.id)
 
         author_query = Author.objects.filter(id__in=matched_authors).distinct()
-
         item_query = Item.objects.filter(
             Q(title__icontains=query) |
             Q(description__icontains=query)
@@ -88,9 +106,14 @@ def search(request):
                 extra_authors = list(author_query.exclude(id__in=existing_ids))
 
                 if tag_slug == 'yubilyary' and year:
+                    prepared_extra = []
                     for author in extra_authors:
-                        if author.birth_year:
-                            author.jubilee_age = year - author.birth_year
+                        anniversaries = get_anniversary_info(author, year)
+                        if anniversaries:
+                            author.anniversaries = anniversaries
+                            author.main_anniversary = anniversaries[0]
+                            prepared_extra.append(author)
+                    extra_authors = prepared_extra
 
                 results_authors = results_authors + extra_authors
             else:

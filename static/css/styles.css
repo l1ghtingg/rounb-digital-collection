@@ -3,6 +3,64 @@ html, body {
     padding: 0;
 }
 
+/* Базовые стили сайта */
+.site-header {
+    position: relative;
+    z-index: 1030;
+    width: 100%;
+    background: #ffffff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.site-title {
+    color: #111111;
+    font-size: 1.05rem;
+    line-height: 1.2;
+}
+
+.site-subtitle {
+    color: #555555;
+    font-size: 0.85rem;
+    line-height: 1.3;
+}
+
+.header-link {
+    color: #111111 !important;
+    font-weight: 500;
+}
+
+.header-link:hover,
+.header-link:focus {
+    color: #7a1f1f !important;
+}
+
+.inner-hero {
+    background: linear-gradient(180deg, #f5f1ee 0%, #ebe3dc 100%);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.page-hero-title {
+    color: #111111;
+}
+
+.page-hero-subtitle {
+    color: #555555;
+}
+
+.navbar-toggler {
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+.navbar-toggler:focus {
+    box-shadow: none;
+}
+
+.navbar-toggler-icon {
+    filter: invert(1);
+    opacity: 0.8;
+}
+
+/* Главная страница */
 body.homepage-body {
     background-color: #000;
 }
@@ -11,29 +69,43 @@ body.homepage-body {
     padding: 0;
 }
 
-.site-header {
-    position: relative;
-    z-index: 1030;
-    width: 100%;
-}
-
 .homepage-body .site-header {
     position: absolute;
     top: 0;
     left: 0;
     background: rgba(0, 0, 0, 0.28);
     backdrop-filter: blur(4px);
+    border-bottom: none;
 }
 
-.site-title,
-.site-subtitle {
+.homepage-body .site-title,
+.homepage-body .site-subtitle {
     color: #fff !important;
 }
 
-.site-subtitle {
+.homepage-body .site-subtitle {
     opacity: 0.9;
 }
 
+.homepage-body .header-link {
+    color: #fff !important;
+}
+
+.homepage-body .header-link:hover,
+.homepage-body .header-link:focus {
+    color: #f3d7d7 !important;
+}
+
+.homepage-body .navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.45);
+}
+
+.homepage-body .navbar-toggler-icon {
+    filter: none;
+    opacity: 1;
+}
+
+/* Hero главной */
 .hero-section {
     position: relative;
     min-height: 100vh;
@@ -105,68 +177,7 @@ header a {
     }
 }
 
-autograph-card {
-    border-radius: 1rem;
-    overflow: hidden;
-}
-
-.autograph-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    gap: 14px;
-}
-
-.autograph-gallery__item {
-    display: block;
-    border: 0;
-    padding: 0;
-    border-radius: 14px;
-    overflow: hidden;
-    background: #f8f9fa;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    cursor: pointer;
-}
-
-.autograph-gallery__item:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
-}
-
-.autograph-gallery__img {
-    width: 100%;
-    height: 260px;
-    object-fit: cover;
-    display: block;
-}
-
-.autograph-open-btn {
-    text-align: left;
-}
-
-.autograph-open-btn:focus {
-    outline: none;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-    border-radius: 14px;
-}
-
-#imageLightboxModal .modal-content {
-    border-radius: 1rem;
-}
-
-#imageLightboxModal .modal-body {
-    padding: 1rem 1rem 1.5rem;
-}
-
-@media (max-width: 768px) {
-    .autograph-gallery {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .autograph-gallery__img {
-        height: 200px;
-    }
-}
+/* Галерея автографов */
 .autograph-card {
     border-radius: 1rem;
     overflow: hidden;

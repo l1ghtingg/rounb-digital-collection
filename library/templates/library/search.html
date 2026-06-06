@@ -48,12 +48,12 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ author }}</h5>
 
-                        {% if tag_slug == 'yubilyary' and author.jubilee_age %}
+                        {% if tag_slug == 'yubilyary' and author.main_anniversary %}
                             <p class="card-text text-muted small mb-2">
-                                Юбилей в {{ year }} году: {{ author.jubilee_age }} лет
+                                {{ author.main_anniversary.label }}
                             </p>
                             <p class="card-text text-muted small">
-                                Год рождения: {{ author.birth_year }}
+                                Дата рождения: {{ author.birth_date|date:"d.m.Y" }}
                             </p>
                         {% endif %}
 
