@@ -2,59 +2,59 @@
 {% load static %}
 
 {% block title %}Цифровая коллекция автографов РОУНБ{% endblock %}
+{% block body_class %}homepage-body{% endblock %}
+{% block main_class %}homepage-main{% endblock %}
 
-{% block content %}
+{% block main_container %}
+<section class="hero-section" style="background-image: url('{% static 'images/main_bg.png' %}');">
+    <div class="hero-overlay"></div>
 
-<!-- Большой герой-блок с фоном на всю страницу -->
-<div class="hero-section d-flex align-items-center justify-content-center text-center" 
-     style="background-image: url('{% static 'images/main_bg.jpg' %}'); 
-            background-size: cover; 
-            background-position: center; 
-            height: 100vh; 
-            min-height: 700px; 
-            position: relative;">
-
-    <!-- Затемнение фона для читаемости текста -->
-    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.45);"></div>
-
-    <div class="container position-relative">
+    <div class="container hero-content">
         <div class="row justify-content-center">
-            <div class="col-lg-9 col-md-10">
+            <div class="col-lg-9 col-md-10 text-center">
                 <h1 class="display-3 fw-bold text-white mb-3 text-shadow">
                     Цифровая коллекция автографов
                 </h1>
+
                 <p class="lead text-white mb-5 fs-4 text-shadow">
-                    Рязанской областной универсальной научной библиотеки им. А.М. Горького
+                    Рязанской областной универсальной научной библиотеки им. Горького
                 </p>
 
-                <!-- Большое поле поиска -->
-                <form method="GET" action="{% url 'library:search' %}" class="mb-5">
+                <form method="GET" action="{% url 'library:search' %}" class="mb-5 position-relative" id="search-form" autocomplete="off">
+                    <label for="search-input" class="form-label text-white fw-semibold mb-2">
+                        Поиск по ФИО
+                    </label>
+
                     <div class="input-group input-group-lg shadow">
-                        <input type="text" 
-                               class="form-control" 
-                               name="q" 
-                               placeholder="Поиск по авторам, автографам или ключевым словам..."
-                               aria-label="Поиск">
+                        <input type="text"
+                               class="form-control"
+                               name="q"
+                               id="search-input"
+                               placeholder="Начните вводить фамилию, имя или отчество"
+                               aria-label="Поиск"
+                               autocomplete="off">
                         <button class="btn btn-primary px-5 fw-bold" type="submit">
                             Найти
                         </button>
                     </div>
+
+                    <div id="suggestions" class="list-group position-absolute w-100 mt-1 shadow-sm" style="z-index: 1050; display: none;"></div>
                 </form>
 
-                <!-- Алфавитный поиск -->
                 <div class="mb-5">
                     <h5 class="text-white mb-3">Алфавитный поиск</h5>
                     <div class="d-flex flex-wrap justify-content-center gap-2">
                         {% for letter in 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ' %}
-                            <a href="{% url 'library:search' %}?q={{ letter }}" 
-                               class="btn btn-outline-light btn-sm px-3 py-2">{{ letter }}</a>
+                            <a href="{% url 'library:search' %}?letter={{ letter }}" class="btn btn-outline-light btn-sm px-3 py-2">
+                                {{ letter }}
+                            </a>
                         {% endfor %}
                     </div>
                 </div>
 
-                                <div class="mt-5">
+                <div class="mt-5">
                     <h5 class="text-white mb-3">Поиск по тегам</h5>
-                    
+
                     <form method="GET" action="{% url 'library:search' %}" id="tag-form">
                         <div class="row justify-content-center align-items-end g-3">
                             <div class="col-md-5">
@@ -70,11 +70,10 @@
                                 </select>
                             </div>
 
-                            <!-- Поле года для юбиляров -->
                             <div class="col-md-3" id="year-field" style="display: none;">
-                                <input type="number" 
-                                       class="form-control form-control-lg" 
-                                       name="year" 
+                                <input type="number"
+                                       class="form-control form-control-lg"
+                                       name="year"
                                        id="year-input"
                                        value="{{ current_year }}"
                                        placeholder="Год">
@@ -86,16 +85,67 @@
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 <script>
-document.getElementById('tag-select').addEventListener('change', function() {
-    const yearField = document.getElementById('year-field');
-    if (this.value === 'yubilyary') {
-        yearField.style.display = 'block';
-    } else {
-        yearField.style.display = 'none';
+const tagSelect = document.getElementById('tag-select');
+if (tagSelect) {
+    tagSelect.addEventListener('change', function() {
+        const yearField = document.getElementById('year-field');
+        yearField.style.display = this.value === 'yubilyary' ? 'block' : 'none';
+    });
+}
+
+const input = document.getElementById('search-input');
+const box = document.getElementById('suggestions');
+const form = document.getElementById('search-form');
+let timer = null;
+
+function hideSuggestions() {
+    box.style.display = 'none';
+    box.innerHTML = '';
+}
+
+input.addEventListener('input', function() {
+    const term = this.value.trim();
+    clearTimeout(timer);
+
+    if (term.length < 2) {
+        hideSuggestions();
+        return;
+    }
+
+    timer = setTimeout(async () => {
+        try {
+            const url = "{% url 'library:autocomplete_authors' %}" + "?term=" + encodeURIComponent(term);
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!data.results || data.results.length === 0) {
+                hideSuggestions();
+                return;
+            }
+
+            box.innerHTML = data.results.map(item => `
+                <a href="${item.url}" class="list-group-item list-group-item-action">
+                    ${item.label}
+                </a>
+            `).join('');
+
+            box.style.display = 'block';
+        } catch (e) {
+            hideSuggestions();
+        }
+    }, 250);
+});
+
+document.addEventListener('click', function(e) {
+    if (!form.contains(e.target)) {
+        hideSuggestions();
     }
 });
 </script>
-
 {% endblock %}

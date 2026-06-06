@@ -8,28 +8,40 @@
     <div class="col-12">
         {% if author.photo %}
         <div class="float-start me-4 mb-3">
-            <img 
-                src="{{ author.photo.url }}" 
-                alt="{{ author }}" 
-                class="rounded shadow cursor-pointer" 
-                style="max-width: 300px; width: 100%; height: auto;"
-                data-bs-toggle="modal" 
+            <img
+                src="{{ author.photo.url }}"
+                alt="{{ author }}"
+                class="rounded shadow cursor-pointer"
+                style="max-width: 300px; width: 100%; height: auto; cursor: pointer;"
+                data-bs-toggle="modal"
                 data-bs-target="#photoModal"
             >
         </div>
         {% endif %}
-        
+
         <h1 class="display-5 fw-bold mb-3">
             {{ author.surname }} {{ author.name }}
             {% if author.patronymic %}{{ author.patronymic }}{% endif %}
         </h1>
-        
-        {% if author.birth_year or author.death_year %}
-        <p class="text-muted lead mb-4">
-            {% if author.birth_year %}{{ author.birth_year }}{% endif %}
-            {% if author.death_year %} — {{ author.death_year }}{% endif %}
-        </p>
+
+        {% if author.birth_date or author.death_date or author.birth_year or author.death_year %}
+<p class="text-muted lead mb-4">
+    {% if author.birth_date %}
+        {{ author.birth_date|date:"d.m.Y" }}
+    {% elif author.birth_year %}
+        {{ author.birth_year }}
+    {% endif %}
+
+    {% if author.death_date or author.death_year %}
+        —
+        {% if author.death_date %}
+            {{ author.death_date|date:"d.m.Y" }}
+        {% elif author.death_year %}
+            {{ author.death_year }}
         {% endif %}
+    {% endif %}
+</p>
+{% endif %}
 
         {% if author.biography %}
             <div class="biography lead">
@@ -39,13 +51,16 @@
             <p class="text-muted fst-italic mt-4">Биография пока не добавлена.</p>
         {% endif %}
 
-        {% if author.collections.exists %}
+        {% if author.collections.all %}
         <div class="mt-4">
             <h5>Коллекции:</h5>
             <ul class="list-inline mb-0">
                 {% for coll in author.collections.all %}
-                    <li class="list-inline-item">
-                        <span class="badge bg-primary text-white px-3 py-2">{{ coll.name }}</span>
+                    <li class="list-inline-item mb-2">
+                        <a href="{% url 'library:collection_detail' coll.pk %}"
+                           class="badge bg-primary text-white px-3 py-2 text-decoration-none">
+                            {{ coll.name }}
+                        </a>
                     </li>
                 {% endfor %}
             </ul>
@@ -54,46 +69,75 @@
     </div>
 </div>
 
-    <h3 class="mb-4">Материалы автора</h3>
+<h3 class="mb-4">Автографы</h3>
 
-    {% if author.items.exists %}
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        {% for item in author.items.all %}
-        <div class="col">
-            <div class="card h-100 shadow-sm border-0">
-                {% if item.image %}
-                    <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 220px; object-fit: cover;">
-                {% else %}
-                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 220px;">
-                        <span class="text-muted">Нет изображения</span>
+{% if items %}
+<div class="row row-cols-1 g-4">
+    {% for item in items %}
+    <div class="col">
+        <div class="card shadow-sm border-0 autograph-card">
+            <div class="card-body">
+                <h5 class="card-title mb-2">{{ item.get_item_type_display }}: {{ item.title }}</h5>
+
+                {% if item.year %}
+                    <p class="card-text text-muted small mb-2">{{ item.year }}</p>
+                {% endif %}
+
+                {% if item.description %}
+                    <div class="card-text small mb-4">
+                        {{ item.description|safe }}
                     </div>
                 {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ item.get_item_type_display }}: {{ item.title }}</h5>
-                    {% if item.year %}
-                        <p class="card-text text-muted small">{{ item.year }}</p>
-                    {% endif %}
-                    {% if item.description %}
-                        <p class="card-text small">{{ item.description|truncatewords:40|safe }}</p>
-                    {% endif %}
-                </div>
+
+                {% if item.image or item.gallery_images.all %}
+                    <div class="autograph-gallery">
+                        {% if item.image %}
+                            <button type="button"
+                                    class="autograph-gallery__item autograph-open-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#imageCarouselModal"
+                                    data-image="{{ item.image.url }}"
+                                    data-caption="{{ item.title }}">
+                                <img src="{{ item.image.url }}"
+                                     alt="{{ item.title }}"
+                                     class="autograph-gallery__img">
+                            </button>
+                        {% endif %}
+
+                        {% for gallery_image in item.gallery_images.all %}
+                            <button type="button"
+                                    class="autograph-gallery__item autograph-open-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#imageCarouselModal"
+                                    data-image="{{ gallery_image.image.url }}"
+                                    data-caption="{{ gallery_image.caption|default:item.title }}">
+                                <img src="{{ gallery_image.image.url }}"
+                                     alt="{{ gallery_image.caption|default:item.title }}"
+                                     class="autograph-gallery__img">
+                            </button>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 180px;">
+                        <span class="text-muted">Нет изображений</span>
+                    </div>
+                {% endif %}
             </div>
         </div>
-        {% endfor %}
     </div>
-    {% else %}
-        <div class="alert alert-info">
-            У этого автора пока нет добавленных материалов.
-        </div>
-    {% endif %}
-
-    <div class="mt-5">
-        <a href="javascript:history.back()" class="btn btn-outline-secondary px-4 py-2">
-            ← Назад
-        </a>
-    </div>
+    {% endfor %}
 </div>
+{% else %}
+    <div class="alert alert-info">
+        У этого автора пока нет добавленных материалов.
+    </div>
+{% endif %}
 
+<div class="mt-5">
+    <a href="javascript:history.back()" class="btn btn-outline-secondary px-4 py-2">
+        ← Назад
+    </a>
+</div>
 
 {% if author.photo %}
 <div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
@@ -110,5 +154,100 @@
     </div>
 </div>
 {% endif %}
+
+<div class="modal fade" id="imageCarouselModal" tabindex="-1" aria-labelledby="imageCarouselModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content bg-dark border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-white" id="imageCarouselModalLabel">Просмотр изображения</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+
+            <div class="modal-body">
+                <div id="imageCarousel" class="carousel slide" data-bs-interval="false">
+                    <div class="carousel-inner" id="imageCarouselInner"></div>
+
+                    <button class="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                        <span class="visually-hidden">Предыдущее</span>
+                    </button>
+
+                    <button class="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                        <span class="visually-hidden">Следующее</span>
+                    </button>
+                </div>
+
+                <p id="carouselImageCaption" class="text-white-50 small text-center mt-3 mb-0"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const galleryButtons = Array.from(document.querySelectorAll('.autograph-open-btn'));
+    const modal = document.getElementById('imageCarouselModal');
+    const carouselInner = document.getElementById('imageCarouselInner');
+    const caption = document.getElementById('carouselImageCaption');
+    const carouselElement = document.getElementById('imageCarousel');
+
+    let carouselInstance = null;
+
+    galleryButtons.forEach((button, index) => {
+        button.dataset.index = index;
+
+        button.addEventListener('click', function () {
+            const images = galleryButtons.map((btn, i) => {
+                return {
+                    src: btn.getAttribute('data-image'),
+                    caption: btn.getAttribute('data-caption') || '',
+                    active: i === index
+                };
+            });
+
+            carouselInner.innerHTML = images.map(image => `
+                <div class="carousel-item${image.active ? ' active' : ''}">
+                    <div class="text-center">
+                        <img src="${image.src}" alt="${image.caption}" class="img-fluid rounded shadow-sm carousel-modal-img">
+                    </div>
+                </div>
+            `).join('');
+
+            caption.textContent = images[index].caption;
+
+            if (carouselInstance) {
+                carouselInstance.dispose();
+            }
+
+            carouselInstance = new bootstrap.Carousel(carouselElement, {
+                interval: false,
+                ride: false,
+                wrap: true
+            });
+        });
+    });
+
+    carouselElement.addEventListener('slid.bs.carousel', function () {
+        const activeIndex = Array.from(carouselInner.querySelectorAll('.carousel-item'))
+            .findIndex(item => item.classList.contains('active'));
+
+        if (activeIndex >= 0 && galleryButtons[activeIndex]) {
+            caption.textContent = galleryButtons[activeIndex].getAttribute('data-caption') || '';
+        }
+    });
+
+    if (modal) {
+        modal.addEventListener('hidden.bs.modal', function () {
+            carouselInner.innerHTML = '';
+            caption.textContent = '';
+            if (carouselInstance) {
+                carouselInstance.dispose();
+                carouselInstance = null;
+            }
+        });
+    }
+});
+</script>
 
 {% endblock %}

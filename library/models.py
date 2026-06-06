@@ -56,6 +56,16 @@ class Author(models.Model):
         verbose_name="Год смерти"
     )
 
+    birth_date = models.DateField(
+    blank=True,
+    null=True,
+    verbose_name="Дата рождения"
+    )
+    death_date = models.DateField(
+    blank=True,
+    null=True,
+    verbose_name="Дата смерти")
+
     photo = models.ImageField(upload_to='authors/', verbose_name="Фото автора", blank=True, null=True)
     biography = RichTextField(verbose_name="Биография", blank=True, null=True)
 
@@ -127,3 +137,39 @@ class Item(models.Model):
             return mark_safe(f'<img src="{self.image.url}" width="120">')
         return "—"
     preview_image.short_description = "Изображение"
+
+class ItemImage(models.Model):
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.CASCADE,
+        related_name='gallery_images',
+        verbose_name="Произведение"
+    )
+    image = models.ImageField(
+        upload_to='items/gallery/%Y/%m/',
+        verbose_name="Изображение"
+    )
+    caption = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Подпись"
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Порядок"
+    )
+
+    class Meta:
+        verbose_name = "Изображение произведения"
+        verbose_name_plural = "Изображения произведения"
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"Изображение для: {self.item.title}"
+
+    def preview_image(self):
+        if self.image:
+            return mark_safe(f'<img src="{self.image.url}" width="120" style="border-radius:6px;">')
+        return "—"
+    preview_image.short_description = "Превью"

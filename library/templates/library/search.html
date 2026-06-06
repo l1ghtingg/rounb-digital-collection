@@ -7,32 +7,59 @@
 
     <h2 class="mb-4">Результаты поиска</h2>
 
-    {% if tag_slug %}
+    {% if selected_tag %}
+        <p class="lead mb-2">
+            По тегу: <strong>{{ selected_tag.name }}</strong>
+        </p>
+
+        {% if tag_slug == 'yubilyary' and year %}
+            <p class="text-muted mb-4">
+                Год: {{ year }}
+            </p>
+        {% endif %}
+    {% elif query %}
         <p class="lead mb-4">
-            По тегу: <strong>{{ tag_slug }}</strong>
+            По запросу: <strong>{{ query }}</strong>
+        </p>
+    {% elif letter %}
+        <p class="lead mb-4">
+            Авторы на букву: <strong>{{ letter }}</strong>
         </p>
     {% endif %}
 
-    <!-- Результаты по авторам -->
     {% if results_authors %}
-        <h4 class="mt-5 mb-3">Авторы ({{ results_authors.count }})</h4>
+        <h4 class="mt-4 mb-3">Найдено: {{ authors_count }}</h4>
         <div class="row row-cols-1 row-cols-md-3 g-4">
             {% for author in results_authors %}
             <div class="col">
                 <div class="card h-100 shadow-sm text-center">
                     {% if author.photo %}
-                        <img src="{{ author.photo.url }}" 
-                             class="rounded-circle mx-auto mt-3 mb-3" 
-                             style="width: 140px; height: 140px; object-fit: cover; border: 4px solid #f8f9fa;">
+                        <img src="{{ author.photo.url }}"
+                             class="rounded-circle mx-auto mt-3 mb-3"
+                             style="width: 140px; height: 140px; object-fit: cover; border: 4px solid #f8f9fa;"
+                             alt="{{ author }}">
                     {% else %}
-                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mt-3 mb-3" 
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mt-3 mb-3"
                              style="width: 140px; height: 140px; border: 4px solid #f8f9fa;">
                             <span class="text-muted fs-1">?</span>
                         </div>
                     {% endif %}
+
                     <div class="card-body">
                         <h5 class="card-title">{{ author }}</h5>
-                        <a href="{% url 'library:author_detail' author.pk %}" class="btn btn-primary btn-sm">Подробнее</a>
+
+                        {% if tag_slug == 'yubilyary' and author.jubilee_age %}
+                            <p class="card-text text-muted small mb-2">
+                                Юбилей в {{ year }} году: {{ author.jubilee_age }} лет
+                            </p>
+                            <p class="card-text text-muted small">
+                                Год рождения: {{ author.birth_year }}
+                            </p>
+                        {% endif %}
+
+                        <a href="{% url 'library:author_detail' author.pk %}" class="btn btn-primary btn-sm">
+                            Подробнее
+                        </a>
                     </div>
                 </div>
             </div>
@@ -40,17 +67,16 @@
         </div>
     {% endif %}
 
-    <!-- Результаты по элементам (книги, автографы и т.д.) -->
-    {% if results_items %}
-        <h4 class="mt-5 mb-3">Материалы ({{ results_items.count }})</h4>
+    {% if results_items and not selected_tag %}
+        <h4 class="mt-5 mb-3">Материалы ({{ items_count }})</h4>
         <div class="row row-cols-1 row-cols-md-3 g-4">
             {% for item in results_items %}
             <div class="col">
                 <div class="card h-100 shadow-sm">
                     {% if item.image %}
-                        <img src="{{ item.image.url }}" 
-                             class="card-img-top" 
-                             style="height: 200px; object-fit: cover;" 
+                        <img src="{{ item.image.url }}"
+                             class="card-img-top"
+                             style="height: 200px; object-fit: cover;"
                              alt="{{ item.title }}">
                     {% endif %}
                     <div class="card-body">

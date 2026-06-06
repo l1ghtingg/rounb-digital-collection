@@ -1,12 +1,34 @@
+from django import forms
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Collection, Author, Item, Tag
+
+from .models import Collection, Author, Item, Tag, ItemImage
+
+
+class AuthorAdminForm(forms.ModelForm):
+    birth_date = forms.DateField(
+        required=False,
+        input_formats=['%d.%m.%Y', '%Y-%m-%d'],
+        widget=forms.DateInput(attrs={'placeholder': 'дд.мм.гггг'})
+    )
+
+    death_date = forms.DateField(
+        required=False,
+        input_formats=['%d.%m.%Y', '%Y-%m-%d'],
+        widget=forms.DateInput(attrs={'placeholder': 'дд.мм.гггг'})
+    )
+
+    class Meta:
+        model = Author
+        fields = '__all__'
+
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ('name',)
+
 
 @admin.register(Collection)
 class CollectionAdmin(admin.ModelAdmin):
@@ -21,15 +43,19 @@ class CollectionAdmin(admin.ModelAdmin):
 
 @admin.register(Author)
 class AuthorAdmin(admin.ModelAdmin):
+    form = AuthorAdminForm
+
     list_display = (
         'surname',
         'name',
         'patronymic',
+        'birth_date',
+        'death_date',
         'preview_photo',
     )
     list_display_links = ('surname', 'name', 'patronymic')
     search_fields = ('surname', 'name', 'patronymic')
-    filter_horizontal = ('collections',)
+    filter_horizontal = ('collections', 'tags')
     readonly_fields = ('preview_photo',)
     ordering = ('surname', 'name', 'patronymic')
 
@@ -40,14 +66,37 @@ class AuthorAdmin(admin.ModelAdmin):
     preview_photo.short_description = "Фото"
 
 
+class ItemImageInline(admin.TabularInline):
+    model = ItemImage
+    extra = 1
+    readonly_fields = ('preview_image',)
+    fields = ('image', 'caption', 'order', 'preview_image')
+
+    def preview_image(self, obj):
+        return obj.preview_image()
+    preview_image.short_description = "Превью"
+
+
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
     list_display = ('title', 'get_item_type_display', 'author', 'year', 'preview_image')
-    list_filter = ('item_type', 'author', 'year', 'tags')        
+    list_filter = ('item_type', 'author', 'year', 'tags')
     search_fields = ('title', 'description', 'author__surname')
     filter_horizontal = ('tags',)
     readonly_fields = ('preview_image',)
+    inlines = [ItemImageInline]
 
     def preview_image(self, obj):
         return obj.preview_image()
     preview_image.short_description = "Изображение"
+
+
+@admin.register(ItemImage)
+class ItemImageAdmin(admin.ModelAdmin):
+    list_display = ('item', 'order', 'preview_image')
+    list_filter = ('item',)
+    readonly_fields = ('preview_image',)
+
+    def preview_image(self, obj):
+        return obj.preview_image()
+    preview_image.short_description = "Превью"

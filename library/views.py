@@ -1,7 +1,10 @@
-from django.shortcuts import render, get_object_or_404
-from django.db.models import Q
-from .models import Collection, Author, Item, Tag
 from datetime import datetime
+
+from django.db.models import Q
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
+
+from .models import Author, Collection, Item, Tag
 
 
 def homepage(request):
@@ -18,11 +21,16 @@ def homepage(request):
 def search(request):
     query = request.GET.get('q', '').strip()
     tag_slug = request.GET.get('tag')
-    year_str = request.GET.get('year')
+    year_str = request.GET.get('year', '').strip()
+    letter = request.GET.get('letter', '').strip()
 
     results_authors = Author.objects.none()
     results_items = Item.objects.none()
     selected_tag = None
+    year = None
+
+    if year_str.isdigit():
+        year = int(year_str)
 
     if tag_slug:
         selected_tag = Tag.objects.filter(slug=tag_slug).first()
@@ -31,41 +39,43 @@ def search(request):
             tags__slug=tag_slug
         ).distinct()
 
-        results_items = Item.objects.filter(
-            tags__slug=tag_slug
-        ).select_related('author').distinct()
+        if tag_slug == 'yubilyary' and year:
+            filtered_authors = []
 
-        # Логика для юбиляров
-        if tag_slug == 'yubilyary' and year_str and year_str.isdigit():
-            year = int(year_str)
+            for author in results_authors:
+                if author.birth_year:
+                    jubilee_age = year - author.birth_year
 
-            # Оставляем только тех авторов,
-            # у кого юбилейная дата (75+, кратно 5)
-            results_authors = [
-                author for author in results_authors
-                if author.birth_year
-                and (year - author.birth_year) >= 75
-                and (year - author.birth_year) % 5 == 0
-            ]
+                    if jubilee_age >= 75 and jubilee_age % 5 == 0:
+                        author.jubilee_age = jubilee_age
+                        filtered_authors.append(author)
 
-            # Материалы только этих авторов
-            results_items = results_items.filter(
-                author__in=results_authors
-            )
+            results_authors = filtered_authors
 
-            print(
-                f"Юбиляры {year} года → "
-                f"Авторов: {len(results_authors)} | "
-                f"Материалов: {results_items.count()}"
-            )
+        results_items = Item.objects.none()
 
-    # Обычный текстовый поиск
-    if query:
-        author_query = Author.objects.filter(
-            Q(surname__istartswith=query) |
-            Q(name__istartswith=query) |
-            Q(patronymic__istartswith=query)
+    if letter:
+        results_authors = Author.objects.filter(
+            surname__istartswith=letter
         ).distinct()
+        results_items = Item.objects.none()
+
+    if query:
+        normalized_query = query.casefold()
+
+        matched_authors = []
+        for author in Author.objects.all():
+            full_name_parts = [
+                author.surname or '',
+                author.name or '',
+                author.patronymic or '',
+            ]
+            full_name = ' '.join(full_name_parts).casefold()
+
+            if normalized_query in full_name:
+                matched_authors.append(author.id)
+
+        author_query = Author.objects.filter(id__in=matched_authors).distinct()
 
         item_query = Item.objects.filter(
             Q(title__icontains=query) |
@@ -73,59 +83,92 @@ def search(request):
         ).select_related('author').distinct()
 
         if tag_slug:
-            # Если results_authors уже list (например юбиляры)
             if isinstance(results_authors, list):
                 existing_ids = [author.id for author in results_authors]
+                extra_authors = list(author_query.exclude(id__in=existing_ids))
 
-                extra_authors = author_query.exclude(
-                    id__in=existing_ids
-                )
+                if tag_slug == 'yubilyary' and year:
+                    for author in extra_authors:
+                        if author.birth_year:
+                            author.jubilee_age = year - author.birth_year
 
-                results_authors = results_authors + list(extra_authors)
+                results_authors = results_authors + extra_authors
             else:
-                results_authors = (
-                    results_authors | author_query
-                ).distinct()
+                results_authors = (results_authors | author_query).distinct()
 
-            results_items = (
-                results_items | item_query
-            ).distinct()
-
+            results_items = (results_items | item_query).distinct()
         else:
             results_authors = author_query
             results_items = item_query
 
+    authors_count = (
+        len(results_authors)
+        if isinstance(results_authors, list)
+        else results_authors.count()
+    )
+
     context = {
         'query': query,
+        'letter': letter,
         'tag_slug': tag_slug,
         'selected_tag': selected_tag,
-
         'results_authors': results_authors,
         'results_items': results_items,
-
-        'authors_count': (
-            len(results_authors)
-            if isinstance(results_authors, list)
-            else results_authors.count()
-        ),
-
+        'authors_count': authors_count,
         'items_count': results_items.count(),
-
         'current_year': datetime.now().year,
+        'year': year,
     }
 
-    return render(
-        request,
-        'library/search.html',
-        context
-    )
+    return render(request, 'library/search.html', context)
 
 
 def author_detail(request, pk):
     author = get_object_or_404(Author, pk=pk)
-    items = author.items.all().order_by('-year', 'title')
+    items = author.items.prefetch_related('gallery_images').all().order_by('-year', 'title')
 
     return render(request, 'library/author_detail.html', {
         'author': author,
         'items': items,
+    })
+
+
+def autocomplete_authors(request):
+    term = request.GET.get('term', '').strip()
+    results = []
+
+    if term:
+        normalized_term = term.casefold()
+        matched_authors = []
+
+        for author in Author.objects.all():
+            surname = (author.surname or '').casefold()
+            name = (author.name or '').casefold()
+            patronymic = (author.patronymic or '').casefold()
+
+            if (
+                surname.startswith(normalized_term) or
+                name.startswith(normalized_term) or
+                patronymic.startswith(normalized_term)
+            ):
+                matched_authors.append(author)
+
+        for author in matched_authors[:10]:
+            results.append({
+                'id': author.id,
+                'label': str(author),
+                'url': f'/author/{author.id}/',
+            })
+
+    return JsonResponse({'results': results})
+
+
+def collection_detail(request, pk):
+    collection = get_object_or_404(Collection, pk=pk)
+    authors = collection.authors.all().order_by('surname', 'name', 'patronymic')
+
+    return render(request, 'library/collection_detail.html', {
+        'collection': collection,
+        'authors': authors,
+        'current_year': datetime.now().year,
     })
